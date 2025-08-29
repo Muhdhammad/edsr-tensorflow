@@ -34,3 +34,18 @@ def flip_images(hr, lr):
         lr_img = lr_img.transpose(Image.FLIP_TOP_BOTTOM)
 
     return hr_img, lr_img
+
+def rotate_images(hr, lr):
+
+    hr_img, lr_img = hr, lr
+
+    deg = [0, 90, 180, 270]
+    rot = random.choice(deg)
+
+    # rotate images 
+    if rot != 0:
+        hr_img = hr_img.rotate(rot, expand=True)
+        lr_img = lr_img.rotate(rot, expand=True)
+
+    return hr_img, lr_img
+        
