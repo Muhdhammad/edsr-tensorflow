@@ -27,11 +27,14 @@ def flip_images(hr, lr):
     if random.random() > 0.5:
         hr_img = hr_img.transpose(Image.FLIP_LEFT_RIGHT)
         lr_img = lr_img.transpose(Image.FLIP_LEFT_RIGHT)
-        
+    
+    """
+    # If wanna add random vertical flips also
     # flip image vertically
     if random.random() > 0.5:
         hr_img = hr_img.transpose(Image.FLIP_TOP_BOTTOM)
         lr_img = lr_img.transpose(Image.FLIP_TOP_BOTTOM)
+    """
 
     return hr_img, lr_img
 
