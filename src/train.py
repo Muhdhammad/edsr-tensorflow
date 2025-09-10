@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from tqdm import tqdm
-from metrics import calculate_psnr, calculate_ssim
+from utils import calculate_psnr, calculate_ssim
 
 def train_model(model, train_dataset, val_dataset, num_epochs, optimizer, criterion,
                 steps_per_epoch, val_steps, reduce_lr_wait, early_stop_patience,
@@ -24,7 +24,7 @@ def train_model(model, train_dataset, val_dataset, num_epochs, optimizer, criter
         train_loss = 0
         num_batches = 0
 
-        for steps, (lr_img, hr_img) in enumerate(tqdm(train_dataset, desc=f"Epoch {epoch+1}/{num_epochs} - Training")):
+        for steps, (hr_img, lr_img) in enumerate(tqdm(train_dataset, desc=f"Epoch {epoch+1}/{num_epochs} - Training")):
             if steps >= steps_per_epoch:
                 break
 
@@ -46,7 +46,7 @@ def train_model(model, train_dataset, val_dataset, num_epochs, optimizer, criter
         psnr_scores = []
         ssim_scores = []
 
-        for steps, (lr_img, hr_img) in enumerate(tqdm(val_dataset, desc=f"Epoch {epoch+1}/{num_epochs} - Validation")):
+        for steps, (hr_img, lr_img) in enumerate(tqdm(val_dataset, desc=f"Epoch {epoch+1}/{num_epochs} - Validation")):
             if steps >= val_steps:
                 break
 
