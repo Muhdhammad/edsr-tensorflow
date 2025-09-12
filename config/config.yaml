@@ -1,7 +1,5 @@
 data:
-  hr_images_path = ""
-  val_split: 0.2
-  test_split: 0.1
+  hr_images_path: ""
   batch_size: 4
   hr_size: 256
   lr_size: 64
@@ -10,12 +8,11 @@ data:
 training:
   batch_size: 4
   num_epochs: 50
-  learning_rate: 1e-4
+  learning_rate: 0.0001
   reduce_lr_wait: 5
   early_stop_patience: 10
-  early_stopping: true
   improvement_epsilon: 1e-4
-  checkpoints_dir = "checkpoints"
+  checkpoints_dir: "checkpoints"
 
 
 model:

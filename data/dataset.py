@@ -2,15 +2,15 @@ import os
 import numpy as np
 from PIL import Image
 from sklearn.model_selection import train_test_split
-from tensorflow.python.keras.utils import Sequence
+from keras.utils import Sequence
 from .augmentations import crop_patches, flip_images, rotate_images
 
-def create_data_splits(hr_image_dir, val_size=0.2, test_size=0.1, random_state=42, log=True):
+def create_data_splits(image_dir, batch_size, log=True):
 
     extensions = ['jpg', 'jpeg', 'png', 'bmp', 'tiff']
     image_paths = []
 
-    for dir_path, _, files in os.walk(hr_image_dir):
+    for dir_path, _, files in os.walk(image_dir):
         for file in files:
             if any (file.lower().endswith(ext) for ext in extensions):
                 image_paths.append(os.path.join(dir_path, file))
@@ -18,37 +18,26 @@ def create_data_splits(hr_image_dir, val_size=0.2, test_size=0.1, random_state=4
     if log:
         print(f"Total high resolution images: {len(image_paths)}")
 
-    train_val_paths, test_path = train_test_split(image_paths, test_size=test_size, random_state=random_state, shuffle=True)
+    return image_paths
 
-    train_path, val_path = train_test_split(train_val_paths, test_size=val_size, random_state=random_state, shuffle=True)
-
-    if log:
-        print(f"Number of training images: {len(train_path)}")
-        print(f"Number of validation images: {len(val_path)}")
-        print(f"Number of test images: {len(test_path)}")
-
-    return train_path, val_path, test_path
-
-def create_datasets(train_path, val_path, test_path, hr_size, lr_size, batch_size, log=True):
+def create_datasets(train_path, val_path, hr_size, lr_size, batch_size, log=True):
 
     train_dataset = SRDataset(
         train_path, batch_size=batch_size, hr_size=hr_size, lr_size=lr_size, do_flip=True, rotate=True, mode='train'
         )
     
     val_dataset = SRDataset(
-        val_path, batch_size=batch_size, hr_size=hr_size, lr_size=lr_size, do_flip=False, rotate=False, mode='val'
-        )
-    
-    test_dataset = SRDataset(
-        test_path, batch_size=batch_size, hr_size=hr_size, lr_size=lr_size, do_flip=False, rotate=False, mode='test'
-        )        
+        val_path, batch_size=1, hr_size=hr_size, lr_size=lr_size, do_flip=False, rotate=False, mode='val'
+        ) 
+
+    train_steps = len(train_dataset)
+    val_steps = len(val_dataset)      
 
     if log:
-        print(f"Training batches: {len(train_dataset)}")
-        print(f"Validation batches: {len(val_dataset)}")
-        print(f"Test batches: {len(test_dataset)}")
+        print(f"Training batches: {len(train_dataset)} batches")
+        print(f"Validation batches: {len(val_dataset)} batches")
     
-    return train_dataset, val_dataset, test_dataset
+    return train_dataset, val_dataset, train_steps, val_steps
 
 class SRDataset(Sequence):
     """
@@ -56,7 +45,7 @@ class SRDataset(Sequence):
     like random crop patches, flip images horizontally or vertically, random image rotation and 
     returns normalized arrays [0,1]
     """
-    def __init__(self, image_paths, batch_size, hr_size=256, lr_size=64, val_size=(1200,800), do_flip=False, rotate=False, mode="train"):  
+    def __init__(self, image_paths, batch_size, hr_size=256, lr_size=64, val_size=(1356,2040), do_flip=False, rotate=False, mode="train"):  
         self.hr_images = image_paths
         self.batch_size = batch_size
         self.hr_size = hr_size

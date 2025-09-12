@@ -3,7 +3,10 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from tqdm import tqdm
-from utils import calculate_psnr, calculate_ssim
+import yaml
+from src.model import edsr
+from src.utils import calculate_psnr, calculate_ssim, rgb2y, shave_borders
+from data.dataset import create_datasets
 
 def train_model(model, train_dataset, val_dataset, num_epochs, optimizer, criterion,
                 steps_per_epoch, val_steps, reduce_lr_wait, early_stop_patience,
@@ -53,11 +56,17 @@ def train_model(model, train_dataset, val_dataset, num_epochs, optimizer, criter
             sr_img = model(lr_img, training=False)
             loss = criterion(hr_img, sr_img)
 
+            sr_img_y = rgb2y(sr_img)
+            hr_img_y = rgb2y(hr_img)
+
+            sr_img_y = shave_borders(sr_img_y, 4)
+            hr_img_y = shave_borders(hr_img_y, 4)
+
             val_loss += loss.numpy()
             val_batches += 1
 
-            psnr_scores.append(tf.reduce_mean(calculate_psnr(sr_img, hr_img)).numpy())
-            ssim_scores.append(tf.reduce_mean(calculate_ssim(sr_img, hr_img)).numpy())
+            psnr_scores.append(tf.reduce_mean(calculate_psnr(sr_img_y, hr_img_y)).numpy())
+            ssim_scores.append(tf.reduce_mean(calculate_ssim(sr_img_y, hr_img_y)).numpy())
 
         avg_val_loss = val_loss / val_batches
         avg_psnr = np.mean(psnr_scores)
@@ -67,7 +76,7 @@ def train_model(model, train_dataset, val_dataset, num_epochs, optimizer, criter
 
         history.append({
             'epoch': epoch+1,
-            'L2 loss': avg_train_loss,
+            'L1 loss': avg_train_loss,
             'Val loss': avg_val_loss,
             'PSNR': avg_psnr,
             'SSIM': avg_ssim
@@ -102,3 +111,47 @@ def train_model(model, train_dataset, val_dataset, num_epochs, optimizer, criter
     df = pd.DataFrame(history)
     df.to_csv(os.path.join(checkpoints_dir, "training_log.csv"), index=False)
     print("Training log saved to training_log.csv")
+
+if __name__ == "__main__":
+
+    root = os.path.dirname(os.path.dirname(__file__))
+    config_path = os.path.join(root, "config", "config.yaml")
+
+    # ===== Load config =====
+    with open(config_path, "r") as f:
+        config = yaml.safe_load(f)
+
+    # ===== Dataset =====
+    train_path = config["data"]["hr_images_path"] + "/DIV2K_train_HR"
+    val_path = config["data"]["hr_images_path"] + "/DIV2K_val_HR"
+
+    train_dataset, val_dataset, train_steps, val_steps = create_datasets(
+        train_path=train_path,
+        val_path=val_path,
+        hr_size=config["data"]["hr_size"],
+        lr_size=config["data"]["hr_size"],
+        batch_size=config["data"]["batch_size"],
+    )
+
+    # ===== Model =====
+    model = edsr(num_channels=config["model"]["num_channels"],
+                 scale_factor=config["model"]["scale_factor"],
+                 num_blocks=config["model"]["num_blocks"]
+                 )
+    
+    optimizer = tf.keras.optimizers.Adam(learning_rate=config["training"]["learning_rate"])
+    criterion = tf.keras.losses.MeanAbsoluteError()
+    
+    # ====== Training =====
+    train_model(model=model,
+                train_dataset=train_dataset,
+                val_dataset=val_dataset,
+                num_epochs=config["training"]["num_epochs"],
+                optimizer=optimizer,
+                criterion=criterion,
+                steps_per_epoch=train_steps,
+                val_steps=val_steps,
+                reduce_lr_wait=config["training"]["reduce_lr_wait"],
+                early_stop_patience=config["training"]["early_stop_patience"],
+                checkpoints_dir=config["training"]["checkpoints_dir"]
+                )
