@@ -6,7 +6,7 @@ from tqdm import tqdm
 import yaml
 from src.model import edsr
 from src.utils import calculate_psnr, calculate_ssim, rgb2y, shave_borders
-from data.dataset import create_datasets
+from data.dataset import create_data_splits, create_datasets
 
 def train_model(model, train_dataset, val_dataset, num_epochs, optimizer, criterion,
                 steps_per_epoch, val_steps, reduce_lr_wait, early_stop_patience,
@@ -122,14 +122,18 @@ if __name__ == "__main__":
         config = yaml.safe_load(f)
 
     # ===== Dataset =====
-    train_path = config["data"]["hr_images_path"] + "/DIV2K_train_HR"
-    val_path = config["data"]["hr_images_path"] + "/DIV2K_val_HR"
+    root = config["data"]["hr_images_path"]
+    train_path = os.path.join(root, "DIV2K_train_HR")
+    val_path = os.path.join(root, "DIV2K_valid_HR")
+
+    train_img_path = create_data_splits(train_path)
+    val_img_path = create_data_splits(val_path)
 
     train_dataset, val_dataset, train_steps, val_steps = create_datasets(
-        train_path=train_path,
-        val_path=val_path,
+        train_path=train_img_path,
+        val_path=val_img_path,
         hr_size=config["data"]["hr_size"],
-        lr_size=config["data"]["hr_size"],
+        lr_size=config["data"]["lr_size"],
         batch_size=config["data"]["batch_size"],
     )
 
