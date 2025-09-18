@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 from keras.utils import Sequence
 from .augmentations import crop_patches, flip_images, rotate_images
 
-def create_data_splits(image_dir, batch_size, log=True):
+def create_data_splits(image_dir, log=True):
 
     extensions = ['jpg', 'jpeg', 'png', 'bmp', 'tiff']
     image_paths = []

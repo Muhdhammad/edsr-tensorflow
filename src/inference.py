@@ -52,3 +52,9 @@ def inference(input_image, model_path, show_comparision=False, save_path=None):
         Image.fromarray(sr_image).save(save_path)
 
     return sr_image
+
+def main():
+    sr = inference("app/comic.png", model_path="app/4x_edsr.keras", save_path="app/result.png")
+
+if __name__ == "__main__":
+    main()
