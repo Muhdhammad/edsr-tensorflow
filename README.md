@@ -1,4 +1,4 @@
-# Image Super-Resolution with EDSR (4× Upscaling)
+# Image Super-Resolution with EDSR 
 
 This repository contains an end-to-end **Image Super-Resolution** system built using the **Enhanced Deep Super-Resolution (EDSR)** model.
 The project covers everything from **model training** to **optimization** and **deployment**, demonstrating a full deep-learning MLOps workflow.
