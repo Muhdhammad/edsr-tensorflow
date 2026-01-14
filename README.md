@@ -156,6 +156,6 @@ The simplest way to deploy the API is with Docker.
 
 ---
 
-** Thanks for checking out this project! **  
+**Thanks for checking out this project!**  
 If you find it useful, please consider giving it a star.
 
